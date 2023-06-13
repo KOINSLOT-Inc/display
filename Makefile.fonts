@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+CACHE := .make-cache
+
+FONTS := include/generated/Fonts.hpp src/generated/Fonts.cpp
+
+TTF_FONTS := $(shell yq '.fonts[] | "$(CACHE)/fonts/" + .name' fonts.yaml)
+$(CACHE)/fonts/%:
+	mkdir -p $(CACHE)/fonts/$*
+	curl --silent --output $(CACHE)/fonts/$*.zip $$(yq '.fonts[] | select(.name == "$*") | .url' fonts.yaml)
+	unzip -d $(CACHE)/fonts/$* $(CACHE)/fonts/$*.zip
+	rm $(CACHE)/fonts/$*.zip
+
+BDF_FONTS := $(shell yq '.fonts[] | .name as $$name | .size[] | "$(CACHE)/bdf-fonts/" + $$name + "/" + $$name + "." + . + ".bdf"' fonts.yaml)
+$(BDF_FONTS): $(TTF_FONTS)
+$(CACHE)/bdf-fonts/%.bdf:
+	mkdir -p "$(@D)"
+	SIZE=$$(echo $(@F) | cut -d '.' -f 2); \
+		NAME=$$(echo $(@F) | cut -d '.' -f 1); \
+		FILE=$(CACHE)/fonts/$$NAME/$$(yq '.fonts[] | select(.name == "'$$NAME'") | .file' fonts.yaml); \
+		otf2bdf $$FILE -p $$SIZE -o "$@" || true
+
+$(FONTS): $(BDF_FONTS) fonts.yaml tools/generate_fonts.py
+	python tools/generate_fonts.py
+	clang-format -i $(FONTS)
+
+.PHONY: generate
+generate: $(FONTS)

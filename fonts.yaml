@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+fonts:
+  - name: "bailleul"
+    size: [8, 12, 16]
+    file: fonts/ttf/Bailleul-Roman.ttf
+    url: https://fontesk.com/download/104955
+  - name: "bailleul_bold"
+    size: [8, 12, 16]
+    file: fonts/ttf/Bailleul-Bold.ttf
+    url: https://fontesk.com/download/104955
+  - name: "intel_one_mono"
+    size: [8, 12, 16]
+    file: fonts/ttf/intelone-mono-font-family-regular.ttf
+    url: https://fontesk.com/download/107370

@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# caches
+.cache/
+__pycache__/
+.devkit/
+.make-cache/
+
+# build files
+build/
+sdkconfig
+!sdkconfig.ci
+!sdkconfig.defaults
+sdkconfig.old
+dependencies.lock
+compile_commands.json
+
+# test files
+test.log
+report.xml
