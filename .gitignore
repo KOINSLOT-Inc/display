@@ -7,6 +7,7 @@
 __pycache__/
 .devkit/
 .make-cache/
+.pytest_cache/
 
 # build files
 build/
