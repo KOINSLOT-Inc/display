@@ -23,8 +23,9 @@ esp_err_t SERIAL_64X64_DRIVER::clearBuffer() {
 }
 
 esp_err_t SERIAL_64X64_DRIVER::sendBufferToDisplay() {
+  printf("\r"); // ensure we're starting at column 0
   printBuffer();
-  printf("\n");
+  printf("\033[66A"); // reset cursor to top of "screen"
   return ESP_OK;
 }
 
@@ -58,12 +59,39 @@ void SERIAL_64X64_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t wid
 };
 
 void SERIAL_64X64_DRIVER::printBuffer() {
+  printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
   for (int y = 0; y < 64; y++) {
+    printf("┃");
     for (int x = 0; x < 32; x++) {
-      printf("%02x", SERIAL_64X64_DRIVER_BUFFER[(y * 32) + x]);
+      uint8_t highNibble = SERIAL_64X64_DRIVER_BUFFER[(y * 32) + x] >> 4;
+      if (highNibble > 12) {
+        printf("█");
+      } else if (highNibble > 8) {
+        printf("▓");
+      } else if (highNibble > 4) {
+        printf("▒");
+      } else if (highNibble > 0) {
+        printf("░");
+      } else {
+        printf(" ");
+      }
+
+      uint8_t lowNibble = SERIAL_64X64_DRIVER_BUFFER[(y * 32) + x] & 0x0f;
+      if (lowNibble > 12) {
+        printf("█");
+      } else if (lowNibble > 8) {
+        printf("▓");
+      } else if (lowNibble > 4) {
+        printf("▒");
+      } else if (lowNibble > 0) {
+        printf("░");
+      } else {
+        printf(" ");
+      }
     }
-    printf("\n");
+    printf("┃\n");
   }
+  printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
 };
 
 } // namespace Display::Driver
