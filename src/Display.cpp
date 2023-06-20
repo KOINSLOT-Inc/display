@@ -12,6 +12,8 @@ esp_err_t Display::clear() { return driver->clearBuffer(); }
 
 esp_err_t Display::update() { return driver->sendBufferToDisplay(); }
 
+esp_err_t Display::setRotation(Rotation rotation) { return driver->setRotation(rotation); }
+
 void Display::drawPixel(int16_t x, int16_t y, uint16_t color) { driver->setBufferPixel(x, y, color); }
 
 void Display::shiftOrigin2DToTopLeft(Origin::Object2D origin, int16_t &x, int16_t &y, uint16_t width, uint16_t height) {

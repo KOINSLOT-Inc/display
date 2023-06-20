@@ -29,6 +29,11 @@ esp_err_t SERIAL_64X64_DRIVER::sendBufferToDisplay() {
   return ESP_OK;
 }
 
+esp_err_t SERIAL_64X64_DRIVER::setRotation(Rotation rotation) {
+  this->rotation = rotation;
+  return ESP_OK;
+}
+
 void SERIAL_64X64_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
   if (x < 0 || x >= 64 || y < 0 || y >= 64) {
     return;
@@ -58,40 +63,56 @@ void SERIAL_64X64_DRIVER::writeBitmapToBuffer(int16_t x, int16_t y, uint16_t wid
   }
 };
 
-void SERIAL_64X64_DRIVER::printBuffer() {
-  printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
-  for (int y = 0; y < 64; y++) {
-    printf("┃");
-    for (int x = 0; x < 32; x++) {
-      uint8_t highNibble = SERIAL_64X64_DRIVER_BUFFER[(y * 32) + x] >> 4;
-      if (highNibble > 12) {
-        printf("█");
-      } else if (highNibble > 8) {
-        printf("▓");
-      } else if (highNibble > 4) {
-        printf("▒");
-      } else if (highNibble > 0) {
-        printf("░");
-      } else {
-        printf(" ");
-      }
-
-      uint8_t lowNibble = SERIAL_64X64_DRIVER_BUFFER[(y * 32) + x] & 0x0f;
-      if (lowNibble > 12) {
-        printf("█");
-      } else if (lowNibble > 8) {
-        printf("▓");
-      } else if (lowNibble > 4) {
-        printf("▒");
-      } else if (lowNibble > 0) {
-        printf("░");
-      } else {
-        printf(" ");
-      }
-    }
-    printf("┃\n");
+void printNibble(int x, int y, bool high) {
+  uint8_t nibble;
+  if (high) {
+    nibble = SERIAL_64X64_DRIVER_BUFFER[(y * 32) + x] >> 4;
+  } else {
+    nibble = SERIAL_64X64_DRIVER_BUFFER[(y * 32) + x] & 0x0f;
   }
-  printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+
+  if (nibble > 12) {
+    printf("█");
+  } else if (nibble > 8) {
+    printf("▓");
+  } else if (nibble > 4) {
+    printf("▒");
+  } else if (nibble > 0) {
+    printf("░");
+  } else {
+    printf(" ");
+  }
+}
+
+void SERIAL_64X64_DRIVER::printBuffer() {
+  switch (rotation) {
+  case Rotation::DEFAULT: {
+    printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+    for (int y = 0; y < 64; y++) {
+      printf("┃");
+      for (int x = 0; x < 32; x++) {
+        printNibble(x, y, true);
+        printNibble(x, y, false);
+      }
+      printf("┃\n");
+    }
+    printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+    break;
+  }
+  case Rotation::CLOCKWISE_180: {
+    printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+    for (int y = 63; y >= 0; y--) {
+      printf("┃");
+      for (int x = 31; x >= 0; x--) {
+        printNibble(x, y, false);
+        printNibble(x, y, true);
+      }
+      printf("┃\n");
+    }
+    printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+    break;
+  }
+  }
 };
 
 } // namespace Display::Driver
