@@ -205,6 +205,22 @@ esp_err_t SSD1327_128X128_SPI_DRIVER::sendBufferToDisplay() {
   return ESP_OK;
 }
 
+esp_err_t SSD1327_128X128_SPI_DRIVER::setRotation(Display::Rotation rotation) {
+  switch (rotation) {
+  case Rotation::DEFAULT: {
+    uint8_t rotateDisplay[] = {0xa0, 0b01000010};
+    return sendCommands(rotateDisplay, sizeof(rotateDisplay));
+    break;
+  }
+  case Rotation::CLOCKWISE_180: {
+    uint8_t rotateDisplay[] = {0xa0, 0b01010001};
+    return sendCommands(rotateDisplay, sizeof(rotateDisplay));
+    break;
+  }
+  }
+  return ESP_OK;
+}
+
 void SSD1327_128X128_SPI_DRIVER::setBufferPixel(int16_t x, int16_t y, uint16_t color) {
   if (x < 0 || x >= 128 || y < 0 || y >= 128) {
     return;

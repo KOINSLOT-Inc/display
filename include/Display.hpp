@@ -49,6 +49,8 @@ public:
   esp_err_t clear();
   esp_err_t update();
 
+  esp_err_t setRotation(Rotation rotation);
+
   void printBuffer() { driver->printBuffer(); };
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);
@@ -70,9 +72,9 @@ public:
                 Flags flags = Flags());
   void getTextSize(uint8_t *fontData, char *text, uint16_t &width, uint16_t &height);
 
-private:
   Driver::Driver *driver;
 
+private:
   void drawCircleWithEvenDiameterFromTopLeftCorner(int16_t x, int16_t y, uint16_t diameter, uint16_t color);
   void drawCircleWithOddDiameterFromCenter(int16_t x, int16_t y, uint16_t diameter, uint16_t color);
 

@@ -11,6 +11,13 @@
 
 namespace Display {
 
+enum class Rotation {
+  DEFAULT,
+  // CLOCKWISE_90,
+  CLOCKWISE_180,
+  // CLOCKWISE_270,
+};
+
 typedef struct Flags {
   bool transparent = false;
 } Flags;
@@ -56,6 +63,8 @@ public:
   virtual esp_err_t clearBuffer() = 0;
   virtual esp_err_t sendBufferToDisplay() = 0;
 
+  virtual esp_err_t setRotation(Rotation rotation) = 0;
+
   virtual void printBuffer() = 0;
 
   // set a single pixel
@@ -94,7 +103,7 @@ public:
   uint16_t getWidth() { return 64; };
   uint16_t getHeight() { return 64; };
 
-  SERIAL_64X64_DRIVER(){};
+  SERIAL_64X64_DRIVER() : Driver{PinMap()} {};
   SERIAL_64X64_DRIVER(PinMap pins) : Driver{pins} {};
 
   esp_err_t sendCommands(uint8_t *commands, uint8_t bytes);
@@ -103,6 +112,8 @@ public:
   esp_err_t clearBuffer();
   esp_err_t sendBufferToDisplay();
 
+  esp_err_t setRotation(Rotation rotation);
+
   void printBuffer();
 
   void setBufferPixel(int16_t x, int16_t y, uint16_t color);
@@ -110,6 +121,9 @@ public:
 
   void writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width, uint16_t height, void *bitmap,
                            Bitmap::BitmapFormat format, uint16_t color, Flags flags = Flags());
+
+private:
+  Rotation rotation = Rotation::DEFAULT;
 };
 
 #ifndef CONFIG_IDF_TARGET_LINUX
@@ -127,6 +141,8 @@ public:
   esp_err_t initializeDisplay();
   esp_err_t clearBuffer();
   esp_err_t sendBufferToDisplay();
+
+  esp_err_t setRotation(Rotation rotation);
 
   void printBuffer();
 
