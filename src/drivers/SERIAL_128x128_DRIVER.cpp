@@ -23,9 +23,10 @@ esp_err_t SERIAL_128X128_DRIVER::clearBuffer() {
 }
 
 esp_err_t SERIAL_128X128_DRIVER::sendBufferToDisplay() {
-  printf("\r"); // ensure we're starting at column 0
+  printf("\033[2J"); // clear screen
+  printf("\033[H");  // move cursor to home
+  printf("\r");      // ensure we're starting at column 0
   printBuffer();
-  printf("\033[130A"); // reset cursor to top of "screen"
   return ESP_OK;
 }
 
