@@ -126,6 +126,34 @@ private:
   Rotation rotation = Rotation::DEFAULT;
 };
 
+class SERIAL_128X128_DRIVER : public Driver {
+public:
+  uint16_t getWidth() { return 128; };
+  uint16_t getHeight() { return 128; };
+
+  SERIAL_128X128_DRIVER() : Driver{PinMap()} {};
+  SERIAL_128X128_DRIVER(PinMap pins) : Driver{pins} {};
+
+  esp_err_t sendCommands(uint8_t *commands, uint8_t bytes);
+
+  esp_err_t initializeDisplay();
+  esp_err_t clearBuffer();
+  esp_err_t sendBufferToDisplay();
+
+  esp_err_t setRotation(Rotation rotation);
+
+  void printBuffer();
+
+  void setBufferPixel(int16_t x, int16_t y, uint16_t color);
+  void setBufferBlock(int16_t x, int16_t y, uint16_t width, uint16_t height, uint16_t color);
+
+  void writeBitmapToBuffer(int16_t x, int16_t y, uint16_t width, uint16_t height, void *bitmap,
+                           Bitmap::BitmapFormat format, uint16_t color, Flags flags = Flags());
+
+private:
+  Rotation rotation = Rotation::DEFAULT;
+};
+
 #ifndef CONFIG_IDF_TARGET_LINUX
 
 class SSD1327_128X128_SPI_DRIVER : public Driver {
