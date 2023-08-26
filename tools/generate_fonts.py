@@ -13,13 +13,15 @@ import yaml
 # This file is used to convert TTF fonts to compressed and encoded byte strings
 # that can be used by the Display component.
 
+
 # Hex encodes an unsigned integer, filling num_bytes bytes. E.g.
 #   - unsigned(1, 1) == "01"
 #   - unsigned(1, 2) == "0001"
 #   - unsigned(178, 1) == "B2"
 #   - unsigned(1788, 2) == "06FC"
-def unsigned(data : int, num_bytes) -> int:
+def unsigned(data: int, num_bytes) -> int:
     return f"{data:0{num_bytes * 2}x}"
+
 
 # Hex encodes a signed integer, filling num_bytes. E.g.
 #   - X > 0 => signed(X, N) == unsigned(X, N)
@@ -27,13 +29,14 @@ def unsigned(data : int, num_bytes) -> int:
 #   - signed(-1, 2) == "FFFF"
 #   - signed(-16, 2) == "FFF0"
 #   - signed(-1788, 2) == "F904"
-def signed(data : int, num_bytes) -> int:
+def signed(data: int, num_bytes) -> int:
     if data < 0:
         return f"{(2 ** (8 * num_bytes)) + data:0{num_bytes * 2}x}"
     return unsigned(data, num_bytes)
 
+
 # iterate through a string of hex digits two at a time, i.e. 1 byte at a time
-def iter_bytes(hex_data : str) -> str:
+def iter_bytes(hex_data: str) -> str:
     nibble = iter(hex_data)
     while True:
         try:
@@ -41,30 +44,32 @@ def iter_bytes(hex_data : str) -> str:
         except StopIteration:
             return ""
 
+
 # Holds encoding information
 class Encoding:
-    offsets : OrderedDict = OrderedDict()
+    offsets: OrderedDict = OrderedDict()
+
 
 # Represents a character in a BDF font file
 class Char:
     def __init__(self, encoding):
         self.encoding = encoding
 
-        self.code : str # char identifier
+        self.code: str  # char identifier
 
-        self.device_width : tuple[
-            int, # pixel width
-            int, # pixel height
+        self.device_width: tuple[
+            int,  # pixel width
+            int,  # pixel height
         ]
 
-        self.bbx : tuple[ # bounding box around black pixels
-            int, # width
-            int, # height
-            int, # x offset from bottom left of bitmap
-            int, # y offset from bottom left of bitmap
+        self.bbx: tuple[  # bounding box around black pixels
+            int,  # width
+            int,  # height
+            int,  # x offset from bottom left of bitmap
+            int,  # y offset from bottom left of bitmap
         ]
 
-        self.bitmap : list[list[int]] # list of rows in binary
+        self.bitmap: list[list[int]]  # list of rows in binary
 
     # compresses and encodes the character into a hex string
     def encode(self) -> str:
@@ -81,62 +86,63 @@ class Char:
         self.encoding.offsets["CHARACTER_BYTES"] = total_offset
         self.encoding.offsets["CHARACTER_BYTES_TYPE"] = "uint16_t"
         total_offset += 2
-        output += "0000" # placeholder to be overwritten later
+        output += "0000"  # placeholder to be overwritten later
 
         # device width
-        self.encoding.offsets["CHARACTER_DEVICE_WIDTH_X"] = total_offset 
+        self.encoding.offsets["CHARACTER_DEVICE_WIDTH_X"] = total_offset
         self.encoding.offsets["CHARACTER_DEVICE_WIDTH_X_TYPE"] = "uint8_t"
         total_offset += 1
         output += unsigned(self.device_width[0], 1)
 
-        self.encoding.offsets["CHARACTER_DEVICE_WIDTH_Y"] = total_offset 
+        self.encoding.offsets["CHARACTER_DEVICE_WIDTH_Y"] = total_offset
         self.encoding.offsets["CHARACTER_DEVICE_WIDTH_Y_TYPE"] = "uint8_t"
         total_offset += 1
         output += unsigned(self.device_width[1], 1)
 
         # bbx
-        self.encoding.offsets["CHARACTER_BBX_WIDTH"] = total_offset 
+        self.encoding.offsets["CHARACTER_BBX_WIDTH"] = total_offset
         self.encoding.offsets["CHARACTER_BBX_WIDTH_TYPE"] = "uint8_t"
         total_offset += 1
         output += unsigned(self.bbx[0], 1)
 
-        self.encoding.offsets["CHARACTER_BBX_HEIGHT"] = total_offset 
+        self.encoding.offsets["CHARACTER_BBX_HEIGHT"] = total_offset
         self.encoding.offsets["CHARACTER_BBX_HEIGHT_TYPE"] = "uint8_t"
         total_offset += 1
         output += unsigned(self.bbx[1], 1)
 
-        self.encoding.offsets["CHARACTER_BBX_X_OFFSET"] = total_offset 
+        self.encoding.offsets["CHARACTER_BBX_X_OFFSET"] = total_offset
         self.encoding.offsets["CHARACTER_BBX_X_OFFSET_TYPE"] = "int8_t"
         total_offset += 1
         output += signed(self.bbx[2], 1)
 
-        self.encoding.offsets["CHARACTER_BBX_Y_OFFSET"] = total_offset 
+        self.encoding.offsets["CHARACTER_BBX_Y_OFFSET"] = total_offset
         self.encoding.offsets["CHARACTER_BBX_Y_OFFSET_TYPE"] = "int8_t"
         total_offset += 1
         output += signed(self.bbx[3], 1)
 
         # bitmap
-        self.encoding.offsets["CHARACTER_BITMAP"] = total_offset 
+        self.encoding.offsets["CHARACTER_BITMAP"] = total_offset
 
         binary_bitmap = [pixel for row in self.bitmap for pixel in row]
 
         head = 0
-        bits = binary_bitmap[head:head+8] # grab 8 bits at a time to encode
+        bits = binary_bitmap[head : head + 8]  # grab 8 bits at a time to encode
         while len(bits) > 0:
             bits = [str(bit) for bit in bits]
 
-            if len(bits) < 8: # right pad last byte with zeros if necessary
+            if len(bits) < 8:  # right pad last byte with zeros if necessary
                 bits += ["0"] * (8 - len(bits))
 
             byte = int("".join(bits), 2)
             output += f"{byte:02x}"
             head += 8
-            bits = binary_bitmap[head:head+8]
+            bits = binary_bitmap[head : head + 8]
 
         # overwrite character bytes now that we have the full size
         output = output[0:4] + unsigned(int(len(output) / 2), 2) + output[8:]
 
         return output
+
 
 # Represents a BDF font file
 class Font:
@@ -144,25 +150,24 @@ class Font:
         self.name = name
         self.encoding = encoding
 
-        self.size : int # font size in pixels
+        self.size: int  # font size in pixels
 
-        self.num_chars : int # number of chars
+        self.num_chars: int  # number of chars
 
-        self.bounding_box : tuple[
-            int, # default font bounding box width
-            int, # default font bounding box height
-
+        self.bounding_box: tuple[
+            int,  # default font bounding box width
+            int,  # default font bounding box height
             # offset from bottom left corner of bounding box as (0, 0)
-            int, # default x offset of the bottom left corner
-            int, # default y offset of the bottom left corner
+            int,  # default x offset of the bottom left corner
+            int,  # default y offset of the bottom left corner
         ]
 
-        self.ascent : int # pixels above the baseline
-        self.descent : int # pixels below the baseline
+        self.ascent: int  # pixels above the baseline
+        self.descent: int  # pixels below the baseline
 
-        self.copyright : str # copyright for the font
+        self.copyright: str  # copyright for the font
 
-        self.chars : list[Char] = [] # all characters in the font
+        self.chars: list[Char] = []  # all characters in the font
 
         self.parse_bdf_file(file)
 
@@ -249,9 +254,9 @@ class Font:
             output += char.encode()
 
         return output
-        
+
     # parses a BDF font file to populate the fields in this class
-    def parse_bdf_file(self, file : str):
+    def parse_bdf_file(self, file: str):
         current_char = Char(self.encoding)
         current_bitmap = []
         reading_bitmap = False
@@ -265,10 +270,14 @@ class Font:
                     continue
 
                 if reading_bitmap:
-                    current_bitmap.append(list(map(
-                        int,
-                        bin(int(line, 16))[2:].zfill(4 * (len(line) - 1)),
-                    ))[:current_char.bbx[0]])
+                    current_bitmap.append(
+                        list(
+                            map(
+                                int,
+                                bin(int(line, 16))[2:].zfill(4 * (len(line) - 1)),
+                            )
+                        )[: current_char.bbx[0]]
+                    )
                     continue
 
                 if line.upper().startswith("SIZE "):
@@ -296,7 +305,7 @@ class Font:
 
 
 # creates the header and source file code for a font
-def generate_encoded_font_code(font : Font) -> (str, str):
+def generate_encoded_font_code(font: Font) -> (str, str):
     hex_data = font.encode()
 
     font_variable_name = f"{font.name}_{font.size}_pt"
@@ -320,15 +329,18 @@ def generate_encoded_font_code(font : Font) -> (str, str):
 
     # split hex data into lines
     line_length = 20
-    lines = [formatted_bytes[i:i + (line_length * 4)] for i in range(0, len(formatted_bytes), line_length * 4)]
+    lines = [
+        formatted_bytes[i : i + (line_length * 4)]
+        for i in range(0, len(formatted_bytes), line_length * 4)
+    ]
 
     for line in lines:
-        source += f"\n  \"{line}\""
+        source += f'\n  "{line}"'
 
     source += ";\n"
 
     return header, source
-            
+
 
 if __name__ == "__main__":
     with open("fonts.yaml") as f:
@@ -356,7 +368,7 @@ if __name__ == "__main__":
         "\n"
         "#pragma once\n"
         "\n"
-        "#include \"esp_types.h\"\n"
+        '#include "esp_types.h"\n'
         "\n"
         "namespace Display::Font {\n"
     )
@@ -371,7 +383,7 @@ if __name__ == "__main__":
         "//\n"
         "// SPDX-License-Identifier: GPL-3.0-or-later\n"
         "\n"
-        "#include \"Fonts.hpp\"\n"
+        '#include "Fonts.hpp"\n'
         "\n"
         "namespace Display::Font {\n"
     )

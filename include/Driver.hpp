@@ -18,9 +18,9 @@ enum class Rotation {
   // CLOCKWISE_270,
 };
 
-typedef struct Flags {
+struct Flags {
   bool transparent = false;
-} Flags;
+};
 
 namespace Bitmap {
 
