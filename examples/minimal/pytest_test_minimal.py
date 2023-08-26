@@ -72,7 +72,10 @@ frame = """
 ┃                                                                ┃
 ┃                                                                ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-""".strip().encode('utf-8')
+""".strip().encode(
+    "utf-8"
+)
+
 
 def test_app(dut):
     dut.expect(frame)
