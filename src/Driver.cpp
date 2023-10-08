@@ -36,6 +36,10 @@ void Driver::write1BitBitmapTo4BitBuffer(uint8_t *bitmap, uint16_t color, uint8_
                                          uint16_t width, uint16_t height, Flags flags) {
   uint16_t bitmapX = 0, bitmapY = 0, bitmapWidth = width;
 
+  if (flags.erase) {
+    color = 0x0;
+  }
+
   if (x < 0)
     bitmapX -= x; // left edge of bitmap is off screen
 
@@ -174,6 +178,10 @@ void Driver::write4BitColorTo4BitBuffer(uint16_t color, uint8_t *buffer, int16_t
   if (!cropBlock(x, y, width, height))
     return; // no overlap between block and screen
 
+  if (flags.erase) {
+    color = 0x0;
+  }
+
   // increment to top left corner of the cropped block
   buffer += (y * getWidth() + x) / 2;
 
@@ -276,111 +284,191 @@ void Driver::write4BitBitmapTo4BitBuffer(uint8_t *bitmap, uint8_t *buffer, int16
   uint16_t bufferWrapDistance = (getWidth() / 2) - innerBytes - (splitLeft ? 1 : 0) - (splitRight ? 1 : 0);
   uint16_t bitmapWrapDistance = (bitmapWidth / 2) - innerBytes - (bitmapSplitLeft ? 1 : 0) - (bitmapSplitRight ? 1 : 0);
 
-  if (unaligned) { // we have to bitshift all copies
-    for (int16_t j = 0; j < height; j++) {
+  if (!flags.erase) {
+    if (unaligned) { // we have to bitshift all copies
+      for (int16_t j = 0; j < height; j++) {
 
-      if (splitLeft) { // fill left edge, we can assume the bitmapSplitLeft ==
-                       // false
-        if (*bitmap >> 4 != 0) {
-          *buffer = (*buffer & 0xf0) | (*bitmap >> 4);
-        } else {
-          if (!flags.transparent) {
-            *buffer &= 0xf0;
+        if (splitLeft) { // fill left edge, we can assume the bitmapSplitLeft ==
+                         // false
+          if (*bitmap >> 4 != 0) {
+            *buffer = (*buffer & 0xf0) | (*bitmap >> 4);
+          } else {
+            if (!flags.transparent) {
+              *buffer &= 0xf0;
+            }
           }
-        }
-        buffer++;
-      }
-
-      for (int16_t i = 0; i < innerBytes; i++) { // fill inner span
-        // high nibble
-        if (*bitmap << 4 != 0) {
-          *buffer = (*bitmap & 0x0f) | (*bitmap << 4);
-        } else {
-          if (!flags.transparent) {
-            *buffer &= 0x0f;
-          }
-        }
-        bitmap++;
-
-        // low nibble
-        if (*bitmap >> 4 != 0) {
-          *buffer = (*bitmap & 0xf0) | (*bitmap >> 4);
-        } else {
-          if (!flags.transparent) {
-            *buffer &= 0xf0;
-          }
-        }
-        buffer++;
-      }
-
-      if (splitRight) { // fill right edge, we can assume the bitmapSplitRight
-                        // == false
-        if (*bitmap << 4 != 0) {
-          *buffer = (*buffer & 0x0f) | (*bitmap << 4);
-        } else {
-          if (!flags.transparent) {
-            *buffer &= 0x0f;
-          }
-        }
-        buffer++;
-      }
-
-      bitmap++;
-
-      buffer += bufferWrapDistance;
-      bitmap += bitmapWrapDistance;
-    }
-  } else { // we can directly copy the inner bytes
-
-    for (int16_t j = 0; j < height; j++) {
-
-      if (splitLeft) { // fill left edge, we can assume the bitmapSplitLeft ==
-                       // true
-        if ((*bitmap & 0x0f) != 0) {
-          *buffer = (*buffer & 0xf0) | (*bitmap & 0x0f);
-        } else {
-          if (!flags.transparent) {
-            *buffer &= 0xf0;
-          }
+          buffer++;
         }
 
-        buffer++;
-        bitmap++;
-      }
-
-      for (int16_t i = 0; i < innerBytes; i++) { // fill inner span
-        if (flags.transparent) {
+        for (int16_t i = 0; i < innerBytes; i++) { // fill inner span
           // high nibble
-          if ((*bitmap & 0xf0) != 0)
-            *buffer = (*buffer & 0x0f) | (*bitmap & 0xf0);
+          if (*bitmap << 4 != 0) {
+            *buffer = (*bitmap & 0x0f) | (*bitmap << 4);
+          } else {
+            if (!flags.transparent) {
+              *buffer &= 0x0f;
+            }
+          }
+          bitmap++;
 
           // low nibble
-          if ((*bitmap & 0x0f) != 0)
-            *buffer = (*buffer & 0xf0) | (*bitmap & 0x0f);
-        } else {
-          *buffer = *bitmap;
+          if (*bitmap >> 4 != 0) {
+            *buffer = (*bitmap & 0xf0) | (*bitmap >> 4);
+          } else {
+            if (!flags.transparent) {
+              *buffer &= 0xf0;
+            }
+          }
+          buffer++;
         }
 
-        buffer++;
-        bitmap++;
-      }
+        if (splitRight) { // fill right edge, we can assume the bitmapSplitRight
+                          // == false
+          if (*bitmap << 4 != 0) {
+            *buffer = (*buffer & 0x0f) | (*bitmap << 4);
+          } else {
+            if (!flags.transparent) {
+              *buffer &= 0x0f;
+            }
+          }
+          buffer++;
+        }
 
-      if (splitRight) { // fill right edge, we can assume the bitmapSplitRight
-                        // == true
-        if ((*bitmap & 0xf0) != 0) {
-          *buffer = (*buffer & 0x0f) | (*bitmap & 0xf0);
-        } else {
-          if (!flags.transparent) {
+        bitmap++;
+
+        buffer += bufferWrapDistance;
+        bitmap += bitmapWrapDistance;
+      }
+    } else { // we can directly copy the inner bytes
+      for (int16_t j = 0; j < height; j++) {
+
+        if (splitLeft) { // fill left edge, we can assume the bitmapSplitLeft ==
+                         // true
+          if ((*bitmap & 0x0f) != 0) {
+            *buffer = (*buffer & 0xf0) | (*bitmap & 0x0f);
+          } else {
+            if (!flags.transparent) {
+              *buffer &= 0xf0;
+            }
+          }
+
+          buffer++;
+          bitmap++;
+        }
+
+        for (int16_t i = 0; i < innerBytes; i++) { // fill inner span
+          if (flags.transparent) {
+            // high nibble
+            if ((*bitmap & 0xf0) != 0)
+              *buffer = (*buffer & 0x0f) | (*bitmap & 0xf0);
+
+            // low nibble
+            if ((*bitmap & 0x0f) != 0)
+              *buffer = (*buffer & 0xf0) | (*bitmap & 0x0f);
+          } else {
+            *buffer = *bitmap;
+          }
+
+          buffer++;
+          bitmap++;
+        }
+
+        if (splitRight) { // fill right edge, we can assume the bitmapSplitRight
+                          // == true
+          if ((*bitmap & 0xf0) != 0) {
+            *buffer = (*buffer & 0x0f) | (*bitmap & 0xf0);
+          } else {
+            if (!flags.transparent) {
+              *buffer &= 0xf;
+            }
+          }
+
+          buffer++;
+          bitmap++;
+        }
+
+        buffer += bufferWrapDistance;
+        bitmap += bitmapWrapDistance;
+      }
+    }
+  } else {
+    if (unaligned) { // we have to bitshift all copies
+      for (int16_t j = 0; j < height; j++) {
+
+        if (splitLeft) { // fill left edge, we can assume the bitmapSplitLeft ==
+                         // false
+          if (*bitmap >> 4 != 0 || !flags.transparent) {
+            *buffer &= 0xf0;
+          }
+          buffer++;
+        }
+
+        for (int16_t i = 0; i < innerBytes; i++) { // fill inner span
+          // high nibble
+          if (*bitmap << 4 != 0 || !flags.transparent) {
+            *buffer &= 0x0f;
+          }
+          bitmap++;
+
+          // low nibble
+          if (*bitmap >> 4 != 0 || !flags.transparent) {
+            *buffer &= 0xf0;
+          }
+          buffer++;
+        }
+
+        if (splitRight) { // fill right edge, we can assume the bitmapSplitRight
+                          // == false
+          if (*bitmap << 4 != 0 || !flags.transparent) {
+            *buffer &= 0x0f;
+          }
+          buffer++;
+        }
+
+        bitmap++;
+
+        buffer += bufferWrapDistance;
+        bitmap += bitmapWrapDistance;
+      }
+    } else { // we can directly copy the inner bytes
+      for (int16_t j = 0; j < height; j++) {
+
+        if (splitLeft) { // fill left edge, we can assume the bitmapSplitLeft ==
+                         // true
+          if ((*bitmap & 0x0f) != 0 || !flags.transparent) {
+            *buffer &= 0xf0;
+          }
+
+          buffer++;
+          bitmap++;
+        }
+
+        for (int16_t i = 0; i < innerBytes; i++) { // fill inner span
+          // high nibble
+          if ((*bitmap & 0xf0) != 0 || !flags.transparent)
+            *buffer = (*buffer & 0x0f);
+
+          // low nibble
+          if ((*bitmap & 0x0f) != 0 || !flags.transparent)
+            *buffer = (*buffer & 0xf0);
+
+          buffer++;
+          bitmap++;
+        }
+
+        if (splitRight) { // fill right edge, we can assume the bitmapSplitRight
+                          // == true
+          if ((*bitmap & 0xf0) != 0 || !flags.transparent) {
             *buffer &= 0xf;
           }
+
+          buffer++;
+          bitmap++;
         }
 
-        buffer++;
-        bitmap++;
+        buffer += bufferWrapDistance;
+        bitmap += bitmapWrapDistance;
       }
-
-      buffer += bufferWrapDistance;
-      bitmap += bitmapWrapDistance;
     }
   }
 };

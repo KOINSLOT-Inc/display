@@ -20,6 +20,7 @@ enum class Rotation {
 
 struct Flags {
   bool transparent = false;
+  bool erase = false;
 };
 
 namespace Bitmap {
