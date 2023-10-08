@@ -7,4 +7,3 @@ url: "https://github.com/KOINSLOT-Inc/display"
 dependencies:
   idf:
     version: ">5.0.0"
-
