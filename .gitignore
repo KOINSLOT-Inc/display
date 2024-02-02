@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
+# local dev files
+.envrc
+
 # caches
 .cache/
 __pycache__/
@@ -17,6 +20,7 @@ sdkconfig
 sdkconfig.old
 dependencies.lock
 compile_commands.json
+dist/
 
 # test files
 test.log

@@ -2,8 +2,11 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+license: "GPL-3.0-or-later"
 description: "Generic display library for use with the Kywy game engine and hardware"
 url: "https://github.com/KOINSLOT-Inc/display"
+maintainers:
+- KOINSLOT, Inc. <contact@kywy.io>
 dependencies:
   idf:
     version: ">5.0.0"
