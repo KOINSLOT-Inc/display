@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2023 KOINSLOT, Inc.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Version, Publish, Release
+on:
+  pull_request:
+    types:
+    - closed
+    branches:
+    - main
+jobs:
+
+  version:
+    if: github.event.pull_request.merged == true
+    uses: KOINSLOT-Inc/devkit/.github/workflows/version.reusable.yaml@main
+    secrets: inherit
+    permissions:
+      contents: write
+
+  upload_component:
+    if: github.event.pull_request.merged == true
+    uses: KOINSLOT-Inc/devkit/.github/workflows/upload_component.reusable.yaml@main
+    secrets: inherit
+
+  release:
+    if: github.event.pull_request.merged == true
+    needs: deploy-documentation
+    uses: KOINSLOT-Inc/devkit/.github/workflows/release.reusable.yaml@main
+    secrets: inherit
+    permissions:
+      contents: write
