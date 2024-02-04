@@ -10,20 +10,17 @@ on:
 jobs:
 
   version:
-    if: github.event.pull_request.merged == true
     uses: KOINSLOT-Inc/devkit/.github/workflows/version.reusable.yaml@main
     secrets: inherit
     permissions:
       contents: write
 
   upload_component:
-    if: github.event.pull_request.merged == true
     needs: version
     uses: KOINSLOT-Inc/devkit/.github/workflows/upload_component.reusable.yaml@main
     secrets: inherit
 
   release:
-    if: github.event.pull_request.merged == true
     needs: upload_component
     uses: KOINSLOT-Inc/devkit/.github/workflows/release.reusable.yaml@main
     secrets: inherit
