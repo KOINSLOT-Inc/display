@@ -19,6 +19,7 @@ jobs:
     needs: version
     uses: KOINSLOT-Inc/devkit/.github/workflows/upload_component.reusable.yaml@main
     secrets: inherit
+    environment: main
 
   release:
     needs: upload_component
