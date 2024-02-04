@@ -17,6 +17,7 @@ jobs:
 
   upload_component:
     needs: version
+    environment: main
     runs-on: ubuntu-latest
     steps:
 
