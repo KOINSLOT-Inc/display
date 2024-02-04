@@ -16,6 +16,7 @@ jobs:
       contents: write
 
   upload_component:
+    needs: version
     runs-on: ubuntu-latest
     steps:
 
