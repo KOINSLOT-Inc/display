@@ -16,10 +16,27 @@ jobs:
       contents: write
 
   upload_component:
-    needs: version
-    uses: KOINSLOT-Inc/devkit/.github/workflows/upload_component.reusable.yaml@main
-    secrets: inherit
-    environment: main
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: check out with tags
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: get version
+      id: version
+      run: |
+        git describe --tags
+        echo "version=$(git describe --tags | sed -E -e 's/-[0-9]+-/-/' -e 's/^v//')" >> "$GITHUB_OUTPUT"
+
+    - name: upload component to the component registry
+      uses: espressif/upload-components-ci-action@v1
+      with:
+        name: ${{ github.event.repository.name }}
+        version: ${{ steps.version.outputs.version }}
+        namespace: "kywyerik"
+        api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
 
   release:
     needs: upload_component
