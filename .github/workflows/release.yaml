@@ -37,7 +37,7 @@ jobs:
       with:
         name: ${{ github.event.repository.name }}
         version: ${{ steps.version.outputs.version }}
-        namespace: "kywyerik"
+        namespace: ${{ vars.IDF_COMPONENT_NAMESPACE }} 
         api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
 
   release:
